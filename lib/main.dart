@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,26 +26,34 @@ class MyApp extends StatelessWidget {
 }
 
 class Contact {
+  final String id;
   final String name;
 
-  const Contact({
+  Contact({
     required this.name,
-  });
+  }): id = const Uuid().v4();
 }
 
-class ContactBook {
-  ContactBook._sharedInstance();
+class ContactBook extends ValueNotifier<List<Contact>>{
+  ContactBook._sharedInstance(): super([]);
   static final _shared = ContactBook._sharedInstance();
   factory ContactBook() => _shared;
 
-  final List<Contact> _contacts = [const Contact(name: 'Zeri')];
-  int get length => _contacts.length;
+  final List<Contact> _contacts = [];
+  int get length => value.length;
 
-  void add({required Contact contact}) {
-    _contacts.add(contact);
+  void add({required Contact contact}) { 
+    final contacts = value;
+    contacts.add(contact);
+    notifyListeners();
   }
 
   void remove({required Contact contact}) {
+    final contacts = value;
+    if(contacts.contains(contact)){
+      contacts.remove(value);
+      notifyListeners();
+    }
     _contacts.remove(contact);
   }
 
