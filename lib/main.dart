@@ -31,18 +31,17 @@ class Contact {
 
   Contact({
     required this.name,
-  }): id = const Uuid().v4();
+  }) : id = const Uuid().v4();
 }
 
-class ContactBook extends ValueNotifier<List<Contact>>{
-  ContactBook._sharedInstance(): super([]);
+class ContactBook extends ValueNotifier<List<Contact>> {
+  ContactBook._sharedInstance() : super([]);
   static final _shared = ContactBook._sharedInstance();
   factory ContactBook() => _shared;
 
-  final List<Contact> _contacts = [];
   int get length => value.length;
 
-  void add({required Contact contact}) { 
+  void add({required Contact contact}) {
     final contacts = value;
     contacts.add(contact);
     notifyListeners();
@@ -50,15 +49,14 @@ class ContactBook extends ValueNotifier<List<Contact>>{
 
   void remove({required Contact contact}) {
     final contacts = value;
-    if(contacts.contains(contact)){
-      contacts.remove(value);
+    if (contacts.contains(contact)) {
+      contacts.remove(contact);
       notifyListeners();
     }
-    _contacts.remove(contact);
   }
 
   Contact? contact({required int atIndex}) =>
-      _contacts.length > atIndex ? _contacts[atIndex] : null;
+      value.length > atIndex ? value[atIndex] : null;
 }
 
 class Home extends StatelessWidget {
@@ -66,18 +64,34 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contactBook = ContactBook();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Page'),
         centerTitle: true,
       ),
-      body: ListView.builder(
-        itemCount: contactBook.length,
-        itemBuilder: (context, index) {
-          final contact = contactBook.contact(atIndex: index)!;
-          return ListTile(
-            title: Text(contact.name),
+      body: ValueListenableBuilder(
+        valueListenable: ContactBook(),
+        builder: (context, value, child) {
+          final contacts = value as List<Contact>;
+          return ListView.builder(
+            itemCount: contacts.length,
+            itemBuilder: (contact, index) {
+              final contact = contacts[index];
+              return Dismissible(
+                onDismissed: (direction) {
+                  ContactBook().remove(contact: contact);
+                },
+                key: ValueKey(contact.id),
+                child: Material(
+                  color: Colors.white,
+                  elevation: 6,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(8),
+                    title: Text(contact.name),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
